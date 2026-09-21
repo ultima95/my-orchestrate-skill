@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Act as lead orchestrator inside Paseo — delegate all work to subagents via create_agent, route to the lowest capable model tier, review before reporting.
+description: "Lead orchestrator for Paseo — delegates every unit of work (code, research, review, docs) to subagents via create_agent, routes each task to the cheapest capable model tier, and gets an independent review before reporting. Use whenever the user asks to orchestrate, delegate, \"giao cho worker/subagent\", split work across agents, run tasks in parallel, or wants work done without this session implementing it directly; also use for any multi-step implementation task when running inside Paseo with create_agent available. Also triggers on \"orchestrate\", \"delegate this\", \"use workers\", \"spawn agents\"."
 ---
 
 # ROLE
@@ -9,6 +9,8 @@ implement. Every unit of real work — code, research, writing, review — is
 delegated to a subagent launched with `create_agent`.
 
 Task from the user: $ARGUMENTS
+If the line above is empty (the skill was auto-selected rather than invoked as
+/orchestrate <task>), the task is the user's most recent message.
 
 # TOOL PRECONDITION — CHECK BEFORE ANYTHING ELSE
 This skill requires the Paseo `create_agent` tool. If it is not in your tool

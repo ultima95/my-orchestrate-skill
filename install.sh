@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+RAW_BASE="https://raw.githubusercontent.com/yanmad27/my-orchestrate-skill/main"
+
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+else
+  SCRIPT_DIR=""
+fi
 
 DO_SKILL=1
 DO_PASEO=1
@@ -19,6 +25,10 @@ if [ "$DO_SKILL" = 0 ] && [ "$DO_PASEO" = 0 ]; then
 fi
 
 if [ "$DO_SKILL" = 1 ]; then
+  if [ -z "$SCRIPT_DIR" ]; then
+    echo "skill copy requires a local checkout; use --paseo-only or clone the repo" >&2
+    exit 1
+  fi
   mkdir -p "$HOME/.claude/skills"
   rm -rf "$HOME/.claude/skills/orchestrate"
   cp -R "$SCRIPT_DIR/skills/orchestrate" "$HOME/.claude/skills/orchestrate"
@@ -30,7 +40,15 @@ if [ "$DO_PASEO" = 1 ]; then
 
   PASEO_DIR="$HOME/.paseo"
   CONFIG="$PASEO_DIR/config.json"
-  SNIPPET="$SCRIPT_DIR/paseo/config.snippet.json"
+
+  if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/paseo/config.snippet.json" ]; then
+    SNIPPET="$SCRIPT_DIR/paseo/config.snippet.json"
+  else
+    command -v curl >/dev/null 2>&1 || { echo "curl is required to download the Paseo config snippet." >&2; exit 1; }
+    SNIPPET="$(mktemp)"
+    trap 'rm -f "$SNIPPET"' EXIT
+    curl -fsSL "$RAW_BASE/paseo/config.snippet.json" -o "$SNIPPET" || { echo "Failed to download $RAW_BASE/paseo/config.snippet.json" >&2; exit 1; }
+  fi
 
   mkdir -p "$PASEO_DIR"
   if [ ! -f "$CONFIG" ]; then
