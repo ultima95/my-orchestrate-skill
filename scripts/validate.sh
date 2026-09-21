@@ -128,6 +128,23 @@ else
   fail "plugin.json and marketplace.json descriptions differ"
 fi
 
+# --- .release-please-manifest.json -----------------------------------------
+
+MANIFEST_JSON=".release-please-manifest.json"
+
+if jq empty "$MANIFEST_JSON" 2>/dev/null; then
+  ok ".release-please-manifest.json is valid JSON"
+else
+  fail ".release-please-manifest.json is not valid JSON"
+fi
+
+MANIFEST_VERSION="$(jq -r '.["."]' "$MANIFEST_JSON")"
+if [ "$MANIFEST_VERSION" = "$PLUGIN_VERSION" ]; then
+  ok ".release-please-manifest.json .[\".\"] equals plugin.json .version ($PLUGIN_VERSION)"
+else
+  fail ".release-please-manifest.json .[\".\"] ($MANIFEST_VERSION) != plugin.json .version ($PLUGIN_VERSION)"
+fi
+
 # --- paseo/config.snippet.json --------------------------------------------
 
 SNIPPET="paseo/config.snippet.json"

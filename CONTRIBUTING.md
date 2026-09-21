@@ -17,6 +17,13 @@ Invariants it checks:
 - `install.sh`: valid syntax/lint, works locally and piped.
 - `README.md`: keeps `## Install`/`## Usage`/`## Troubleshooting` and
   mentions `/orchestrate`.
+- `.release-please-manifest.json`: `.["."]` matches plugin.json `.version`.
 
-Bump the version in **both** `.claude-plugin` JSON files whenever SKILL.md
-or install.sh changes. PRs need the `validate` check green before merge.
+PRs need the `validate` check green before merge.
+
+Commits must follow [Conventional Commits](https://www.conventionalcommits.org/):
+`feat:` bumps minor, `fix:`/`docs:`/`chore:` bump patch, `feat!:` or a
+`BREAKING CHANGE` footer bumps major. release-please opens/updates a
+`chore(main): release X.Y.Z` PR from these commits; merging it bumps both
+`.claude-plugin` JSON files, `version.txt`, tags `vX.Y.Z`, and publishes the
+GitHub Release. Do not hand-edit versions.
