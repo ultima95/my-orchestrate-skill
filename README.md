@@ -25,7 +25,7 @@ Ensure Paseo MCP tool injection is enabled in `~/.paseo/config.json`:
 }
 ```
 
-Without `injectIntoAgents: true`, the Lead agent will not have the `create_agent` tool.
+Without `injectIntoAgents: true`, the orchestrating agent will not have the `create_agent` tool.
 
 ## Install
 
@@ -80,7 +80,9 @@ The skill assumes four agent profiles and one provider exist in
 
 - **Lead** — provider `claude`, model `claude-opus-4-8`. The orchestrator
   profile; it has `create_agent` and delegates instead of implementing. Open
-  a Paseo agent with this profile to run `/orchestrate`.
+  a Paseo agent with this profile to run `/orchestrate`. Optional — any agent
+  on provider `claude` can orchestrate; this profile is just a preset with high
+  thinking.
 - **Cheap worker** — provider `claude-worker`, model `claude-haiku-4-5`. For
   extraction, formatting, log triage, mechanical refactors — the default
   down-tier target.
@@ -128,9 +130,10 @@ After reload, the Paseo agent creation dialog should show four profiles:
 
 **`/orchestrate` replies "This chat's provider has create_agent disabled"**
 
-You are not running in a Lead-profile agent, or `daemon.mcp.injectIntoAgents`
-is not set to `true` in `~/.paseo/config.json`. Check the config and verify
-the MCP settings in [Requirements](#requirements).
+Your agent's provider is not `claude` (e.g. it is `claude-worker`, which strips
+`create_agent`), or `daemon.mcp.injectIntoAgents` is not set to `true` in
+`~/.paseo/config.json`. Check the config and verify the MCP settings in
+[Requirements](#requirements).
 
 **Profiles missing after install**
 
@@ -145,10 +148,10 @@ Then run `paseo daemon reload`.
 
 ## Usage
 
-### Start a Lead agent
+### Start an orchestrating agent
 
-- In Paseo, open (or create) an agent and select the **Lead** profile (provider `claude`, model `claude-opus-4-8`).
-- Ensure Paseo MCP injection is enabled and the daemon has been reloaded (see [Verify](#verify)).
+- In Paseo, open any agent on provider `claude` (a normal Claude Code chat). It has `create_agent` as long as `daemon.mcp.injectIntoAgents` is on.
+- Optional: pick the **Lead** profile for a preset with opus + high thinking. Not required — `/orchestrate` works from any `claude` agent.
 
 ### Invoke
 

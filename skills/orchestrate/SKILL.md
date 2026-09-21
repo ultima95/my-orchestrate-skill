@@ -20,8 +20,8 @@ work silently runs on whatever oversized model this chat happens to use.
 Say exactly this and stop:
 
   "This chat's provider has create_agent disabled, so I cannot orchestrate.
-   Relaunch with the Lead profile (provider `claude`) and run /orchestrate
-   again."
+   Relaunch this chat on provider `claude` (e.g. a plain Claude agent or the
+   Lead profile) and run /orchestrate again."
 
 # DELEGATION IS MANDATORY
 Before doing any work yourself, ask: "can a subagent do this?" If yes, delegate.
