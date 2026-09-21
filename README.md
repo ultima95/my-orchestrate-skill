@@ -73,6 +73,35 @@ original first). Use `./install.sh --skill-only` to skip the Paseo merge, or
 `./install.sh --paseo-only` to skip the skill copy (e.g. if you installed
 via the plugin marketplace and only need the config).
 
+## Upgrade
+
+**Plugin (Option A):**
+
+```
+/plugin marketplace update my-orchestrate-skill
+/plugin update orchestrate@my-orchestrate-skill
+```
+
+Auto-update is off by default for third-party marketplaces like this one.
+To enable it: `/plugin` → **Marketplaces** → select `my-orchestrate-skill` →
+**Enable auto-update** (Claude Code then checks in the background after
+session start and prompts `/reload-plugins`). Re-run the Paseo config step
+(`curl … --paseo-only`) only if a release's notes say profiles changed.
+
+**Clone (Option B):**
+
+```sh
+cd my-orchestrate-skill && git pull && ./install.sh
+```
+
+Use `./install.sh --skill-only` to skip the Paseo config merge.
+
+**Check version:** `/plugin` → **Installed** tab, or
+`claude plugin details orchestrate@my-orchestrate-skill`. Compare with the
+[releases page](https://github.com/yanmad27/my-orchestrate-skill/releases).
+
+Run `paseo daemon reload` only if the Paseo config actually changed.
+
 ## Paseo configuration
 
 The skill assumes four agent profiles and one provider exist in
