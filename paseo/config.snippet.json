@@ -1,0 +1,65 @@
+{
+  "daemon": {
+    "agentProfiles": [
+      {
+        "name": "Lead",
+        "icon": "compass",
+        "provider": "claude",
+        "model": "claude-opus-4-8",
+        "modeId": "auto",
+        "thinkingOptionId": "high",
+        "notes": "Orchestrator only. Has create_agent; delegates every unit of real work to a worker profile and never implements. Use with the /orchestrate skill."
+      },
+      {
+        "name": "Cheap worker",
+        "icon": "hammer",
+        "provider": "claude-worker",
+        "model": "claude-haiku-4-5",
+        "modeId": "auto",
+        "thinkingOptionId": "low",
+        "notes": "Extraction, classification, formatting, log triage, renames, doc/comment updates, mechanical refactors, test scaffolding."
+      },
+      {
+        "name": "Worker",
+        "icon": "hammer",
+        "provider": "claude-worker",
+        "model": "claude-sonnet-5",
+        "modeId": "auto",
+        "thinkingOptionId": "high",
+        "notes": "DEFAULT for implementation, debugging, multi-file refactors, research, writing."
+      },
+      {
+        "name": "Reviewer",
+        "icon": "eye",
+        "provider": "claude-worker",
+        "model": "claude-sonnet-5",
+        "modeId": "plan",
+        "thinkingOptionId": "high",
+        "notes": "Read-only independent review of diffs against acceptance criteria.\nNever edits files."
+      }
+    ]
+  },
+  "agents": {
+    "providers": {
+      "claude-worker": {
+        "extends": "claude",
+        "label": "Claude Worker",
+        "description": "Delegated worker — cannot spawn or control other agents",
+        "paseoTools": {
+          "disabledTools": [
+            "create_agent",
+            "send_agent_prompt",
+            "cancel_agent",
+            "kill_agent",
+            "archive_agent",
+            "create_workspace",
+            "archive_workspace",
+            "create_schedule",
+            "create_heartbeat",
+            "respond_to_permission"
+          ]
+        }
+      }
+    }
+  }
+}

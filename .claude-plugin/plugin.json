@@ -1,0 +1,8 @@
+{
+  "name": "orchestrate",
+  "description": "Act as lead orchestrator inside Paseo — delegate all work to subagents via create_agent, route to the lowest capable model tier, review before reporting.",
+  "version": "1.0.0",
+  "author": {
+    "name": "yanmad27"
+  }
+}
