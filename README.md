@@ -3,8 +3,8 @@
 A Claude Code skill that turns the current session into a lead orchestrator
 inside [Paseo](https://paseo.sh): it delegates every unit of real work to
 subagents via `create_agent`, routes each task to the cheapest capable model
-tier, and reviews the result before reporting back. It never edits files or
-writes code itself.
+tier, and gets an independent review before reporting back — it never edits
+files or writes code itself.
 
 ## Requirements
 
@@ -49,15 +49,15 @@ Run these as two separate commands in Claude Code (they cannot be combined in on
 /plugin install orchestrate@my-orchestrate-skill
 ```
 
-Then configure Paseo:
+3. Configure Paseo:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/yanmad27/my-orchestrate-skill/main/install.sh | bash -s -- --paseo-only
 ```
 
-This skips the skill copy (already installed via plugin) and merges the Paseo
-config (downloading `paseo/config.snippet.json` on the fly). Or merge
-`paseo/config.snippet.json` into `~/.paseo/config.json` manually.
+This skips the skill copy (already installed via the plugin) and merges the
+Paseo config, downloading `paseo/config.snippet.json` on the fly. You can
+also merge it in by hand — see [Manual merge](#manual-merge).
 
 ### Option B: clone + script
 
@@ -73,9 +73,60 @@ original first). Use `./install.sh --skill-only` to skip the Paseo merge, or
 `./install.sh --paseo-only` to skip the skill copy (e.g. if you installed
 via the plugin marketplace and only need the config).
 
+## Paseo configuration
+
+The skill assumes four agent profiles and one provider exist in
+`~/.paseo/config.json` (`daemon.agentProfiles` and `agents.providers`):
+
+- **Lead** — provider `claude`, model `claude-opus-4-8`. The orchestrator
+  profile: it has `create_agent` and delegates instead of implementing. Open
+  a Paseo agent with this profile to run `/orchestrate`. Optional — any agent
+  on provider `claude` can orchestrate; this profile is just a preset with
+  high thinking.
+- **Cheap worker** — provider `claude-worker`, model `claude-haiku-4-5`. For
+  extraction, formatting, log triage, mechanical refactors — the default
+  down-tier target.
+- **Worker** — provider `claude-worker`, model `claude-sonnet-5`. The default
+  tier for implementation, debugging, and research.
+- **Reviewer** — provider `claude-worker`, model `claude-sonnet-5`, plan mode.
+  Read-only review of a worker's diff against the original acceptance
+  criteria.
+
+`claude-worker` (`agents.providers.claude-worker`) is a separate provider,
+extending `claude`, with `create_agent`, `send_agent_prompt`, `cancel_agent`,
+and other agent-control tools disabled. Workers must run under this provider
+so a delegated subagent can't spawn or control further agents — only the
+Lead profile (plain `claude` provider) can.
+
+### Manual merge
+
+If you'd rather not run `install.sh`, open `paseo/config.snippet.json` and
+merge its `daemon.agentProfiles` entries and `agents.providers.claude-worker`
+into `~/.paseo/config.json` by hand, then run `paseo daemon reload`.
+
+## Restart & verify
+
+After any install path, reload the Paseo daemon to load the new profiles and
+provider:
+
+```sh
+paseo daemon reload
+```
+
+If profiles still don't appear, restart instead:
+
+```sh
+paseo daemon restart
+```
+
+Or quit the Paseo desktop app and restart it.
+
+Then check the Paseo agent creation dialog — it should show four profiles:
+**Lead**, **Cheap worker**, **Worker**, and **Reviewer**.
+
 ## Upgrade
 
-**Plugin (Option A):**
+### Plugin (Option A)
 
 ```
 /plugin marketplace update my-orchestrate-skill
@@ -95,7 +146,7 @@ the background after session start and prompts `/reload-plugins`). Re-run
 the Paseo config step (`curl … --paseo-only`) only if a release's notes say
 profiles changed.
 
-**Clone (Option B):**
+### Clone (Option B)
 
 ```sh
 cd my-orchestrate-skill && git pull && ./install.sh
@@ -108,59 +159,6 @@ Use `./install.sh --skill-only` to skip the Paseo config merge.
 [releases page](https://github.com/yanmad27/my-orchestrate-skill/releases).
 
 Run `paseo daemon reload` only if the Paseo config actually changed.
-
-## Paseo configuration
-
-The skill assumes four agent profiles and one provider exist in
-`~/.paseo/config.json` (`daemon.agentProfiles` and `agents.providers`):
-
-- **Lead** — provider `claude`, model `claude-opus-4-8`. The orchestrator
-  profile; it has `create_agent` and delegates instead of implementing. Open
-  a Paseo agent with this profile to run `/orchestrate`. Optional — any agent
-  on provider `claude` can orchestrate; this profile is just a preset with high
-  thinking.
-- **Cheap worker** — provider `claude-worker`, model `claude-haiku-4-5`. For
-  extraction, formatting, log triage, mechanical refactors — the default
-  down-tier target.
-- **Worker** — provider `claude-worker`, model `claude-sonnet-5`. The default
-  tier for implementation, debugging, and research.
-- **Reviewer** — provider `claude-worker`, model `claude-sonnet-5`, plan mode.
-  Read-only review of a worker's diff against the original acceptance
-  criteria.
-
-`claude-worker` (`agents.providers.claude-worker`) is a separate provider,
-extending `claude`, with `create_agent`, `send_agent_prompt`, `cancel_agent`,
-and other agent-control tools disabled. Workers must run under this provider
-so a delegated subagent can't spawn or control further agents — only the Lead
-profile (plain `claude` provider) can.
-
-### Manual merge
-
-If you'd rather not run `install.sh`, open `paseo/config.snippet.json` and
-merge its `daemon.agentProfiles` entries and `agents.providers.claude-worker`
-into `~/.paseo/config.json` by hand, then run `paseo daemon reload`.
-
-## Restart the daemon
-
-After any install path, reload the Paseo daemon to load the new profiles and
-provider:
-
-```sh
-paseo daemon reload
-```
-
-If profiles still don't appear, restart instead:
-
-```sh
-paseo daemon restart
-```
-
-Or quit the Paseo desktop app and restart it.
-
-## Verify
-
-After reload, the Paseo agent creation dialog should show four profiles:
-**Lead**, **Cheap worker**, **Worker**, and **Reviewer**.
 
 ## Troubleshooting
 
@@ -195,7 +193,7 @@ profiles you added yourself.
 ### Start an orchestrating agent
 
 - In Paseo, open any agent on provider `claude` (a normal Claude Code chat). It has `create_agent` as long as `daemon.mcp.injectIntoAgents` is on.
-- Optional: pick the **Lead** profile for a preset with opus + high thinking. Not required — `/orchestrate` works from any `claude` agent.
+- Optional: pick the **Lead** profile for a preset with opus + high thinking — see [Paseo configuration](#paseo-configuration). Not required; `/orchestrate` works from any `claude` agent.
 
 ### Invoke
 
