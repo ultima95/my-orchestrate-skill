@@ -95,17 +95,30 @@ If you cannot write acceptance criteria, the task is underspecified. Split it.
 - Sequential tasks share this workspace.
 
 # SUPERVISION
-- Leave `notifyOnFinish` at its default (true). Do NOT poll to wait; you are
-  notified when a worker finishes, errors, or needs permission. Keep working.
-- Use `get_agent_status` / `get_agent_activity` only to gather detail for a
-  follow-up, never as a wait loop.
-- `send_agent_prompt` to correct or extend a worker instead of relaunching.
-- `cancel_agent` + `send_agent_prompt` with a rewritten spec when a worker
-  drifts. `archive_agent` only when abandoning it.
+- Event-driven first: rely on finish/error/permission notifications
+  (`notifyOnFinish` default true). Never busy-poll or hand-write a wait loop.
+- Watchdog: right after launching the FIRST worker of a task, call
+  `create_heartbeat` named `orchestrate-watchdog`, cron `*/3 * * * *`,
+  `expiresIn` "2h", prompt: "Watchdog tick: for every worker you launched
+  that has not reported, call get_agent_status; if state is running, call
+  get_agent_activity (limit 5) and compare the newest entry timestamp with
+  your last tick. No new activity across 2 consecutive ticks (~6 min) = stalled."
+- Stalled worker, escalate one step per tick: (1) `send_agent_prompt` —
+  "Status check: reply with what you have done, what is blocking you, and
+  continue. If waiting on a permission, say so." (2) still no activity next
+  tick: `cancel_agent`, then `send_agent_prompt` with the original spec plus
+  last known progress and "resume from there". (3) second cancel on the same
+  worker: `archive_agent`, relaunch fresh with the same spec, same tier —
+  this is not a capability failure, do not escalate tier.
+- Pending permission ≠ stalled — surface it to the user, don't nudge/cancel.
+- Task's workers all reported and final report delivered: `delete_heartbeat`
+  `orchestrate-watchdog`. Never leave it running after the task ends; create
+  it fresh on the next task.
+- `get_agent_status` / `get_agent_activity`: watchdog and follow-up detail
+  only, never a hand-written wait loop. `send_agent_prompt` to correct or
+  extend a worker outside the escalation above.
 - On a permission notification, surface it to the user. Never call
   `respond_to_permission` to approve anything destructive on your own.
-- `create_heartbeat` prompts YOU on a cadence — use it to babysit CI/PRs,
-  not to "keep workers going".
 
 # REVIEW BEFORE REPORTING
 Implementation work gets an independent review: launch the "Reviewer"
@@ -115,3 +128,4 @@ the code. Fix findings via `send_agent_prompt` to the original worker.
 # REPORTING
 Report outcome, files changed, and anything unresolved. Mention which agents
 ran only if asked or if something failed.
+- If a worker had to be nudged, cancelled, or relaunched, say so in one line.
