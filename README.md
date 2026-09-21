@@ -79,14 +79,21 @@ via the plugin marketplace and only need the config).
 
 ```
 /plugin marketplace update my-orchestrate-skill
-/plugin update orchestrate@my-orchestrate-skill
 ```
 
-Auto-update is off by default for third-party marketplaces like this one.
-To enable it: `/plugin` → **Marketplaces** → select `my-orchestrate-skill` →
-**Enable auto-update** (Claude Code then checks in the background after
-session start and prompts `/reload-plugins`). Re-run the Paseo config step
-(`curl … --paseo-only`) only if a release's notes say profiles changed.
+Then, in a terminal (not inside a Claude Code session):
+
+```sh
+claude plugin update orchestrate@my-orchestrate-skill
+```
+
+If you have a session open, run `/reload-plugins` there afterward to load
+the change. Auto-update is off by default for third-party marketplaces like
+this one. To enable it: `/plugin` → **Marketplaces** → select
+`my-orchestrate-skill` → **Enable auto-update** (Claude Code then checks in
+the background after session start and prompts `/reload-plugins`). Re-run
+the Paseo config step (`curl … --paseo-only`) only if a release's notes say
+profiles changed.
 
 **Clone (Option B):**
 
