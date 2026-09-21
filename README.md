@@ -182,6 +182,14 @@ jq . ~/.paseo/config.json
 
 Then run `paseo daemon reload`.
 
+**`daemon.agentProfiles.N.id: Invalid input: expected string, received undefined`**
+
+Your `~/.paseo/config.json` has profiles from an older version of this
+installer that shipped without an `id`. Re-run `install.sh` (or the
+`--paseo-only` form) — it backfills a stable `id` onto any existing profile
+whose name matches one of this plugin's managed profiles, without touching
+profiles you added yourself.
+
 ## Usage
 
 ### Start an orchestrating agent
